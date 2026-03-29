@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DiabeteScan — AI Diabetes Risk Assessment</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Our CSS -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ════════════════════════════════
+       NAVBAR
+  ════════════════════════════════ -->
+  <nav>
+    <a class="logo" href="#">
+      <div class="logo-box">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 2a4 4 0 014 4M12 2a4 4 0 00-4 4M12 2v4
+                   M8 6H4a2 2 0 00-2 2v10a2 2 0 002 2h16
+                   a2 2 0 002-2V8a2 2 0 00-2-2h-4M8 6h8"/>
+          <circle cx="12" cy="14" r="3"/>
+        </svg>
+      </div>
+      DiabeteScan
+    </a>
+
+    <div class="nav-links">
+      <a href="#form-section">Assessment</a>
+      <a href="#features">About</a>
+      <a href="#">Research</a>
+    </div>
+
+    <button class="nav-cta" onclick="scrollToForm()">Check My Risk</button>
+    <button onclick="toggleDarkMode()" class="btn-secondary" style="margin-left:10px;">
+      🌙 Dark Mode
+    </button>
+  </nav>
+
+
+  <!-- ════════════════════════════════
+       HERO SECTION
+  ════════════════════════════════ -->
+  <section class="hero">
+
+    <!-- Left: headline + stats -->
+    <div class="hero-left">
+      <div class="badge">
+        <span class="badge-dot"></span>
+        AI-Powered Health Screening
+      </div>
+
+      <h1>Know your <span>diabetes risk</span> in 2 minutes</h1>
+
+      <p>
+        Answer a few simple health questions and our machine learning model
+        will assess your risk of Type 2 diabetes — instantly, privately,
+        and for free.
+      </p>
+
+      <div class="hero-btns">
+        <button class="btn-primary" onclick="scrollToForm()">Start Free Assessment</button>
+        <button class="btn-secondary" onclick="scrollToFeatures()">Learn how it works</button>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-item">
+          <div class="stat-n">94.2%</div>
+          <div class="stat-l">Model accuracy</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-n">8</div>
+          <div class="stat-l">Risk factors analyzed</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-n">100%</div>
+          <div class="stat-l">Private &amp; free</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: live gauge preview card -->
+    <div class="gauge-hero-card">
+      <div class="ghc-label">Your live risk preview</div>
+
+      <div class="gauge-svg-wrap">
+        <svg width="260" height="150" viewBox="0 0 260 150" id="hero-gauge-svg">
+          <defs>
+            <linearGradient id="hgGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#1D9E75"/>
+              <stop offset="50%"  stop-color="#BA7517"/>
+              <stop offset="100%" stop-color="#D85A30"/>
+            </linearGradient>
+          </defs>
+          <!-- Track -->
+          <path d="M 20 140 A 110 110 0 0 1 240 140"
+                fill="none" stroke="#e5e5e5" stroke-width="14" stroke-linecap="round"/>
+          <!-- Filled arc -->
+          <path d="M 20 140 A 110 110 0 0 1 240 140"
+                fill="none" stroke="url(#hgGrad)" stroke-width="14" stroke-linecap="round"
+                stroke-dasharray="345" stroke-dashoffset="345" id="hero-arc"/>
+          <!-- Needle pivot -->
+          <circle cx="130" cy="140" r="7" fill="#aaa" id="hero-pivot"/>
+          <!-- Needle -->
+          <line x1="130" y1="133" x2="90" y2="65"
+                stroke="#aaa" stroke-width="3" stroke-linecap="round" id="hero-needle"/>
+          <!-- Score text -->
+          <text x="130" y="118" text-anchor="middle"
+                font-family="DM Serif Display,serif" font-size="32"
+                fill="#aaa" id="hero-pct">—</text>
+          <text x="130" y="134" text-anchor="middle"
+                font-family="DM Sans,sans-serif" font-size="10"
+                fill="#aaa" id="hero-sublabel">Fill form below</text>
+        </svg>
+      </div>
+
+      <div class="gauge-low-labels">
+        <span>Low</span><span>Moderate</span><span>High</span>
+      </div>
+
+      <div class="gauge-risk-pill gp-idle" id="hero-pill">
+        Waiting for your data
+      </div>
+
+      <!-- Mini metric tiles — update live as user types -->
+      <div class="mini-metrics">
+        <div class="mm-item">
+          <div class="mm-label">Glucose</div>
+          <div class="mm-val idle" id="mm-glucose">—</div>
+        </div>
+        <div class="mm-item">
+          <div class="mm-label">BMI</div>
+          <div class="mm-val idle" id="mm-bmi">—</div>
+        </div>
+        <div class="mm-item">
+          <div class="mm-label">Blood Pressure</div>
+          <div class="mm-val idle" id="mm-bp">—</div>
+        </div>
+        <div class="mm-item">
+          <div class="mm-label">Age</div>
+          <div class="mm-val idle" id="mm-age">—</div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+
+  <!-- ════════════════════════════════
+       ASSESSMENT FORM
+  ════════════════════════════════ -->
+  <section class="form-section" id="form-section">
+    <div class="sec-label">Step-by-step assessment</div>
+    <h2 class="sec-title">Enter your health details</h2>
+    <p class="sec-sub">All inputs stay in your browser — nothing is stored or shared.</p>
+
+    <div class="form-card">
+
+      <!-- Form header -->
+      <div class="form-top">
+        <span class="form-top-title">Health Risk Assessment Form</span>
+        <div class="steps">
+          <div class="step on">1</div>
+          <div class="step on">2</div>
+          <div class="step on">3</div>
+        </div>
+      </div>
+
+      <div class="fb">
+
+        <!-- PART 1: Personal Info -->
+        <div class="fg-title">Personal Information</div>
+        <div class="frow">
+
+          <div class="fg">
+            <label for="age">Age <span class="hint">(years)</span></label>
+            <input type="number" id="age" placeholder="e.g. 35"
+                   min="1" max="120" oninput="liveUpdate()" />
+          </div>
+
+          <div class="fg">
+            <label>Gender</label>
+            <div class="tog-grp" id="gender-grp">
+              <button class="tog" onclick="setTog('gender-grp','gender','Male',this)">Male</button>
+              <button class="tog" onclick="setTog('gender-grp','gender','Female',this)">Female</button>
+              <button class="tog" onclick="setTog('gender-grp','gender','Other',this)">Other</button>
+            </div>
+            <input type="hidden" id="gender" />
+          </div>
+
+        </div>
+
+        <hr class="fdiv" />
+
+        <!-- PART 2: Biometrics -->
+        <div class="fg-title">Biometric Measurements</div>
+        <div class="frow">
+
+          <div class="fg">
+            <label for="glucose">Blood Glucose <span class="hint">(mg/dL)</span></label>
+            <input type="number" id="glucose" placeholder="e.g. 110"
+                   min="0" max="500" oninput="liveUpdate()" />
+          </div>
+
+          <div class="fg">
+            <label for="bp">Blood Pressure <span class="hint">(mmHg diastolic)</span></label>
+            <input type="number" id="bp" placeholder="e.g. 72"
+                   min="0" max="200" oninput="liveUpdate()" />
+          </div>
+
+        </div>
+        <div class="frow">
+
+          <div class="fg">
+            <label for="bmi">BMI <span class="hint">(kg/m²)</span></label>
+            <div class="sl-wrap">
+              <span class="sl-val" id="bmi-out">25.0</span>
+              <input type="range" id="bmi" min="10" max="60" step="0.5" value="25"
+                     oninput="slUpd(this,'bmi-out',1); liveUpdate()" />
+            </div>
+          </div>
+
+          <div class="fg">
+            <label for="skin">Skin Thickness <span class="hint">(mm)</span></label>
+            <input type="number" id="skin" placeholder="e.g. 20"
+                   min="0" max="100" oninput="liveUpdate()" />
+          </div>
+
+        </div>
+        <div class="frow">
+
+          <div class="fg">
+            <label for="insulin">Insulin Level <span class="hint">(mu U/mL)</span></label>
+            <input type="number" id="insulin" placeholder="e.g. 80"
+                   min="0" max="900" oninput="liveUpdate()" />
+          </div>
+
+          <div class="fg">
+            <label for="pregnancies">Number of Pregnancies <span class="hint">(0 if N/A)</span></label>
+            <input type="number" id="pregnancies" placeholder="e.g. 0"
+                   min="0" max="20" oninput="liveUpdate()" />
+          </div>
+
+        </div>
+
+        <hr class="fdiv" />
+
+        <!-- PART 3: History -->
+        <div class="fg-title">Family &amp; Medical History</div>
+        <div class="frow">
+
+          <div class="fg">
+            <label for="dpf">Diabetes Pedigree Function <span class="hint">(0.08 – 2.42)</span></label>
+            <div class="sl-wrap">
+              <span class="sl-val" id="dpf-out">0.50</span>
+              <input type="range" id="dpf" min="0.08" max="2.42" step="0.01" value="0.5"
+                     oninput="slUpd(this,'dpf-out',2); liveUpdate()" />
+            </div>
+          </div>
+
+          <div class="fg">
+            <label>Family History of Diabetes</label>
+            <div class="tog-grp" id="family-grp">
+              <button class="tog" onclick="setTog('family-grp','family','None',this)">None</button>
+              <button class="tog" onclick="setTog('family-grp','family','Parent',this)">Parent</button>
+              <button class="tog" onclick="setTog('family-grp','family','Sibling',this)">Sibling</button>
+              <button class="tog" onclick="setTog('family-grp','family','Both',this)">Both</button>
+            </div>
+            <input type="hidden" id="family" />
+          </div>
+
+        </div>
+
+        <div class="fg">
+          <label>Lifestyle</label>
+          <div class="tog-grp" id="ls-grp">
+            <button class="tog" onclick="setTog('ls-grp','lifestyle','Sedentary',this)">Sedentary</button>
+            <button class="tog" onclick="setTog('ls-grp','lifestyle','Lightly Active',this)">Lightly Active</button>
+            <button class="tog" onclick="setTog('ls-grp','lifestyle','Moderate',this)">Moderate</button>
+            <button class="tog" onclick="setTog('ls-grp','lifestyle','Very Active',this)">Very Active</button>
+          </div>
+          <input type="hidden" id="lifestyle" />
+        </div>
+
+      </div><!-- /fb -->
+
+      <!-- Form footer -->
+      <div class="ff">
+        <p class="disclaim">
+          For educational use only. Always consult a licensed medical
+          professional for health decisions.
+        </p>
+        <button class="submit-btn" onclick="runPrediction()">
+          Analyse My Risk
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+
+    </div><!-- /form-card -->
+  </section>
+
+
+  <!-- ════════════════════════════════
+       RESULT SECTION  (hidden until prediction runs)
+  ════════════════════════════════ -->
+  <div id="loading" style="display:none; text-align:center; padding:40px;">
+    <h3>🤖 AI is analysing your data...</h3>
+  </div>
+  <section class="result-section" id="result-section">
+    <div class="sec-label">Your personalised result</div>
+    <h2 class="sec-title">Risk Assessment Report</h2>
+    <p class="sec-sub">Based on the data you entered. Not a medical diagnosis.</p>
+
+    <div class="result-grid">
+
+      <!-- Result gauge -->
+      <div class="result-gauge-card">
+        <div class="rg-title">Your risk score</div>
+
+        <svg width="260" height="150" viewBox="0 0 260 150" id="res-gauge-svg">
+          <defs>
+            <linearGradient id="rgGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#1D9E75"/>
+              <stop offset="50%"  stop-color="#BA7517"/>
+              <stop offset="100%" stop-color="#D85A30"/>
+            </linearGradient>
+          </defs>
+          <path d="M 20 140 A 110 110 0 0 1 240 140"
+                fill="none" stroke="#e5e5e5" stroke-width="14" stroke-linecap="round"/>
+          <path d="M 20 140 A 110 110 0 0 1 240 140"
+                fill="none" stroke="url(#rgGrad)" stroke-width="14" stroke-linecap="round"
+                stroke-dasharray="345" stroke-dashoffset="345" id="res-arc"/>
+          <circle cx="130" cy="140" r="7" fill="#1D9E75" id="res-pivot"/>
+          <line x1="130" y1="133" x2="90" y2="65"
+                stroke="#1D9E75" stroke-width="3" stroke-linecap="round" id="res-needle"/>
+          <text x="130" y="118" text-anchor="middle"
+                font-family="DM Serif Display,serif" font-size="32"
+                fill="#1D9E75" id="res-pct">0%</text>
+          <text x="130" y="134" text-anchor="middle"
+                font-family="DM Sans,sans-serif" font-size="10" fill="#888">Risk Score</text>
+        </svg>
+
+        <div class="r-gauge-labels">
+          <span>Low</span><span>Moderate</span><span>High</span>
+        </div>
+
+        <div class="rbadge rb-low" id="r-badge">Low Risk</div>
+        <p class="rdesc" id="r-desc"></p>
+      </div>
+
+      <!-- Key metrics + factor bars -->
+      <div class="metrics-side">
+        <div class="ms-head">Key metrics at a glance</div>
+        <div class="ms-body">
+          <div class="kn-grid" id="r-kn"></div>
+          <canvas id="riskChart" height="120" style="margin-top:20px;"></canvas>
+          <div class="fac-section-title">Risk factor breakdown</div>
+          <div id="r-bars"></div>
+        </div>
+      </div>
+
+    </div><!-- /result-grid -->
+
+    <!-- Recommendations -->
+    <div class="recs-card">
+      <div class="recs-title">Personalised recommendations</div>
+      <div class="rec-grid" id="r-recs"></div>
+    </div>
+    <button class="btn-primary" onclick="downloadPDF()" style="margin-bottom:10px;">
+      📄 Download Report
+    </button>
+    <button class="btn-secondary retake-btn" onclick="resetForm()">
+      ← Retake Assessment
+    </button>
+
+  </section>
+
+
+  <!-- ════════════════════════════════
+       FEATURES SECTION
+  ════════════════════════════════ -->
+  <section class="feat-sec" id="features">
+    <div class="feat-inner">
+      <div class="sec-label">Why DiabeteScan</div>
+      <h2 class="sec-title">Built on clinical research</h2>
+
+      <div class="feat-grid">
+
+        <div class="feat-card">
+          <div class="feat-icon">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="4"/>
+              <path d="M12 3v1M12 20v1M4.22 4.22l.7.7M19.08 19.08l.7.7
+                       M3 12h1M20 12h1M4.22 19.78l.7-.7M19.08 4.92l.7-.7"/>
+            </svg>
+          </div>
+          <div class="feat-title">PIMA dataset model</div>
+          <p class="feat-desc">
+            Trained on 768 clinical patient records with validated risk
+            features from the well-known PIMA Indians Diabetes study.
+          </p>
+        </div>
+
+        <div class="feat-card">
+          <div class="feat-icon">
+            <svg viewBox="0 0 24 24">
+              <rect x="3" y="11" width="18" height="11" rx="2"/>
+              <path d="M7 11V7a5 5 0 0110 0v4"/>
+            </svg>
+          </div>
+          <div class="feat-title">100% private</div>
+          <p class="feat-desc">
+            Your inputs are never sent to a server or stored.
+            All computation runs locally in your browser — zero data collection.
+          </p>
+        </div>
+
+        <div class="feat-card">
+          <div class="feat-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
+          </div>
+          <div class="feat-title">Explainable results</div>
+          <p class="feat-desc">
+            We show which factors drive your risk score — not just a number
+            but actionable insight you can act on.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ════════════════════════════════
+       FOOTER
+  ════════════════════════════════ -->
+  <footer>
+    <div class="footer-logo">DiabeteScan</div>
+    <p>
+      For educational use only. Not a substitute for professional medical advice.
+      &copy; 2025 DiabeteScan
+    </p>
+  </footer>
+
+
+  <!-- Our JavaScript -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="script.js"></script>
+
+</body>
+</html>
