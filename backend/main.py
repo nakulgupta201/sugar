@@ -16,7 +16,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 # Add ml/ to path for direct imports
-ML_DIR = Path(__file__).parent.parent / "ml"
+ML_DIR = Path("/app/ml") if Path("/app/ml").exists() else Path(__file__).resolve().parent.parent / "ml"
 sys.path.insert(0, str(ML_DIR))
 
 from app.routes import predict_router, health_router, model_router, auth_router

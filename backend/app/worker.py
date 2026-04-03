@@ -14,7 +14,7 @@ from app.core.celery_app import celery
 from app.core.database import SessionLocal
 from app.models.prediction import Prediction
 
-ML_DIR = Path(__file__).parent.parent.parent.parent / "ml"
+ML_DIR = Path("/app/ml") if Path("/app/ml").exists() else Path(__file__).resolve().parent.parent.parent.parent / "ml"
 sys.path.insert(0, str(ML_DIR))
 
 logger = logging.getLogger(__name__)
