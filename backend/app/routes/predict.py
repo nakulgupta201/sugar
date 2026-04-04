@@ -1,7 +1,7 @@
 """
-POST /api/predict     — Enqueue prediction job, return job_id (202)
-GET  /api/predict/{id} — Poll for result (200 when completed)
-GET  /api/history      — Fetch past predictions (authenticated or session)
+POST /api/predict          — Enqueue prediction job, return job_id (202)
+GET  /api/predict/{id}     — Poll for result (200 when completed)
+GET  /api/predict/{id}/pdf — Download PDF report
 """
 import uuid
 import logging
@@ -11,8 +11,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.auth import get_optional_user
-from app.models.prediction import Prediction, User
+from app.models.prediction import Prediction
 from app.middleware.rate_limit import limiter
 
 logger = logging.getLogger(__name__)
@@ -124,7 +123,6 @@ async def enqueue_prediction(
     request: Request,
     body: PredictRequest,
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_optional_user),
 ):
     """
     Accepts patient health data, stores a pending Prediction row,
@@ -135,7 +133,7 @@ async def enqueue_prediction(
 
     row = Prediction(
         id=str(uuid.uuid4()),
-        user_id=current_user.id if current_user else None,
+        user_id=None,
         status="pending",
         features_json=features,
         send_email=int(body.send_email),
@@ -159,14 +157,10 @@ async def enqueue_prediction(
 
 async def _run_sync_fallback(row: Prediction, features: dict, body: PredictRequest, db: Session):
     """Synchronous fallback when Celery is not available."""
-    import sys
-    from pathlib import Path
-    ML_DIR = Path(__file__).parent.parent.parent.parent / "ml"
-    sys.path.insert(0, str(ML_DIR))
     import datetime
 
     try:
-        from predict import predictor
+        from app.ml.predict import predictor
         if not predictor._loaded:
             predictor.load()
 
@@ -208,31 +202,12 @@ async def get_prediction(
     return _row_to_result(row)
 
 
-# ─── GET /history ─────────────────────────────────────────────────────────────
-@router.get("/history", response_model=List[HistoryItem],
-            summary="Fetch authenticated user's prediction history")
-async def get_history(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_optional_user),
-    limit: int = 20,
-):
-    if not current_user:
-        raise HTTPException(status_code=401, detail="Login required to view history")
-
-    rows = (
-        db.query(Prediction)
-        .filter(Prediction.user_id == current_user.id)
-        .order_by(Prediction.created_at.desc())
-        .limit(limit)
-        .all()
-    )
-    return [
-        HistoryItem(
-            job_id=r.id,
-            status=r.status,
-            probability=r.probability,
-            risk_level=r.risk_level,
-            created_at=r.created_at.isoformat() if r.created_at else None,
-        )
-        for r in rows
-    ]
+# ─── GET /predict/{job_id}/pdf ──────────────────────────────────────────────────
+@router.get("/predict/{job_id}/pdf", summary="Download PDF report")
+async def get_prediction_pdf(job_id: str):
+    from app.services.pdf_generator import PDFS_DIR
+    pdf_path = PDFS_DIR / f"{job_id}.pdf"
+    if not pdf_path.exists():
+        raise HTTPException(status_code=404, detail="PDF report not found")
+    from fastapi.responses import FileResponse
+    return FileResponse(path=pdf_path, media_type="application/pdf", filename=f"Diabetes_Risk_Report_{job_id}.pdf")

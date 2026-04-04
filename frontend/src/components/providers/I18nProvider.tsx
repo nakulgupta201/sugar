@@ -14,10 +14,24 @@ export const LANGUAGES = [
 
 export type LangCode = (typeof LANGUAGES)[number]["code"];
 
+import enJson from "../../../public/locales/en/common.json";
+
+function flattenObj(obj: any, prefix = ""): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (typeof value === "object" && value !== null) {
+      Object.assign(result, flattenObj(value, prefix + key + "."));
+    } else {
+      result[prefix + key] = String(value);
+    }
+  }
+  return result;
+}
+
 // ─── Translation maps ─────────────────────────────────────────────────────────
 // Key translations for all India languages. English is the base fallback.
 const TRANSLATIONS: Record<LangCode, Record<string, string>> = {
-  en: {},
+  en: flattenObj(enJson),
   hi: {
     "nav.home": "होम", "nav.predict": "अनुमान", "nav.about": "परिचय",
     "nav.history": "इतिहास", "nav.login": "लॉग इन", "nav.logout": "लॉग आउट",
@@ -176,8 +190,16 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   };
 
   const t = (key: string, vars?: Record<string, string | number>): string => {
-    const dict = TRANSLATIONS[lang];
-    let str = dict[key] ?? TRANSLATIONS["en"][key] ?? key;
+    const dict = TRANSLATIONS[lang] || {};
+    const enDict = TRANSLATIONS["en"] || {};
+    let str = dict[key] ?? enDict[key];
+    
+    if (!str) {
+      const fallback = key.split('.').pop() || key;
+      str = fallback.replace(/([A-Z])/g, ' $1').trim();
+      str = str.charAt(0).toUpperCase() + str.slice(1);
+    }
+    
     if (vars) {
       Object.entries(vars).forEach(([k, v]) => {
         str = str.replace(`{{${k}}}`, String(v));

@@ -72,7 +72,13 @@ const HOW_IT_WORKS = [
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen" style={{ paddingTop: "4rem" }}>
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8 }}
+      className="min-h-screen" 
+      style={{ paddingTop: "4rem" }}
+    >
 
       {/* ── HERO ── */}
       <section
@@ -362,6 +368,6 @@ export default function HomePage() {
         </div>
         <p>© 2026 DiabetesAI · Built with Next.js + FastAPI + XGBoost</p>
       </footer>
-    </div>
+    </motion.div>
   );
 }

@@ -2,26 +2,19 @@
 FastAPI Application Entry Point — Production-Grade
 - Async lifespan: DB init + ML model preload
 - Celery / Redis async task queue
-- JWT authentication
 - Rate limiting
 - Full CORS
 """
 
-import sys
 import logging
-from pathlib import Path
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-# Add ml/ to path for direct imports
-ML_DIR = Path("/app/ml") if Path("/app/ml").exists() else Path(__file__).resolve().parent.parent / "ml"
-sys.path.insert(0, str(ML_DIR))
-
-from app.routes import predict_router, health_router, model_router, auth_router
+from app.routes import predict_router, health_router, model_router
 from app.middleware.logging import LoggingMiddleware
-from app.middleware.rate_limit import limiter, rate_limit_handler
+from app.middleware.rate_limit import limiter
 from app.core.database import init_db
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -38,16 +31,14 @@ async def lifespan(app: FastAPI):
     """Startup: init DB tables + preload ML model. Shutdown: log."""
     logger.info("🚀 DiabetesAI API starting...")
 
-    # Create DB tables (for dev; use Alembic migrations in production)
     try:
         init_db()
         logger.info("✅ Database tables initialised")
     except Exception as e:
         logger.error(f"❌ DB init failed: {e}")
 
-    # Preload ML artifacts
     try:
-        from predict import predictor
+        from app.ml.predict import predictor
         predictor.load()
         logger.info("✅ ML model loaded successfully")
     except Exception as e:
@@ -62,8 +53,8 @@ app = FastAPI(
     title="DiabetesAI — Risk Prediction API",
     description=(
         "Production-grade REST API for diabetes risk prediction "
-        "powered by calibrated ensemble ML with SHAP explainability, "
-        "async Celery task queue, and JWT authentication."
+        "powered by calibrated ensemble ML with SHAP explainability "
+        "and async Celery task queue."
     ),
     version="2.0.0",
     docs_url="/api/docs",
@@ -87,7 +78,6 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ─── Routers ──────────────────────────────────────────────────────────────────
 app.include_router(health_router,  prefix="/api")
-app.include_router(auth_router,    prefix="/api")
 app.include_router(model_router,   prefix="/api")
 app.include_router(predict_router, prefix="/api")
 

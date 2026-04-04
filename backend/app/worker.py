@@ -14,9 +14,6 @@ from app.core.celery_app import celery
 from app.core.database import SessionLocal
 from app.models.prediction import Prediction
 
-ML_DIR = Path("/app/ml") if Path("/app/ml").exists() else Path(__file__).resolve().parent.parent.parent.parent / "ml"
-sys.path.insert(0, str(ML_DIR))
-
 logger = logging.getLogger(__name__)
 
 
@@ -39,7 +36,7 @@ def run_prediction(self, prediction_id: str):
         db.commit()
 
         # 3. Load predictor (singleton; already warm on worker startup)
-        from predict import predictor
+        from app.ml.predict import predictor
         if not predictor._loaded:
             predictor.load()
 
@@ -57,12 +54,19 @@ def run_prediction(self, prediction_id: str):
         row.completed_at = datetime.datetime.utcnow()
         db.commit()
 
-        # 6. Optional email
+        # 6. Optional email & PDF GEN
+        pdf_path = None
+        try:
+            from app.services.pdf_generator import generate_pdf_report
+            pdf_path = generate_pdf_report(prediction_id, result)
+        except Exception as e:
+            logger.warning(f"PDF generation failed: {e}")
+
         if row.send_email and row.email:
             try:
                 import asyncio
                 from app.services.email_service import send_prediction_email
-                asyncio.run(send_prediction_email(row.email, result))
+                asyncio.run(send_prediction_email(row.email, result, pdf_path=pdf_path))
                 row.email_sent = 1
                 db.commit()
             except Exception as e:

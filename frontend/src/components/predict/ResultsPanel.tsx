@@ -74,14 +74,7 @@ export function ResultsPanel({ result, onReset }: { result: PredictResult; onRes
   })).sort((a: any, b: any) => b.abs_value - a.abs_value);
 
   const handleDownloadPDF = async () => {
-    if (!reportRef.current) return;
-    const canvas = await html2canvas(reportRef.current, { scale: 2, backgroundColor: null });
-    const img = canvas.toDataURL("image/png");
-    const pdf = new jsPDF({ format: "a4", unit: "px" });
-    const width  = pdf.internal.pageSize.getWidth();
-    const height = (canvas.height * width) / canvas.width;
-    pdf.addImage(img, "PNG", 0, 0, width, height);
-    pdf.save("diabetes-risk-report.pdf");
+    window.open(`http://localhost:8000/api/predict/${result.job_id}/pdf`, '_blank');
   };
 
   const riskMessage = riskLabel === "Low" ? t("results.lowRisk") :

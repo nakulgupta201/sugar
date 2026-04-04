@@ -22,9 +22,9 @@ class HealthResponse(BaseModel):
 @router.get("/health", response_model=HealthResponse, summary="API health check")
 async def health():
     try:
-        from predict import predictor
-        loaded = predictor._loaded
+        from app.ml.predict import predictor
+        model_loaded = predictor._loaded
     except Exception:
-        loaded = False
+        model_loaded = False
 
-    return HealthResponse(status="ok", model_loaded=loaded, version="1.0.0")
+    return HealthResponse(status="ok", model_loaded=model_loaded, version="1.0.0")
