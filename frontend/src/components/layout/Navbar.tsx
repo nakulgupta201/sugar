@@ -6,33 +6,26 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { THEMES, useTheme } from "@/components/providers/ThemeProvider";
 import { LANGUAGES, useI18n } from "@/components/providers/I18nProvider";
-import { useAuth } from "@/components/providers/AuthProvider";
-import { Activity, Menu, X, ChevronDown, User as UserIcon, LogOut } from "lucide-react";
+import { Activity, Menu, X } from "lucide-react";
 import { clsx } from "clsx";
 
 export function Navbar() {
   const { theme, setTheme } = useTheme();
   const { lang, setLang, t } = useI18n();
-  const { user, logout } = useAuth();
   const pathname = usePathname();
   
   const [menuOpen, setMenuOpen] = useState(false);
   const [themeOpen, setThemeOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
-  const [authOpen, setAuthOpen] = useState(false);
   
   const currentTheme = THEMES.find((t) => t.id === theme);
   const currentLang = LANGUAGES.find((l) => l.code === lang);
 
   const NAV_LINKS = [
-    { href: "/",        label: t("nav.home") },
-    { href: "/predict", label: t("nav.predict") },
-    { href: "/about",   label: t("nav.about") },
+    { href: "/",        label: t("nav.home", { defaultValue: "Home" }) },
+    { href: "/predict", label: t("nav.predict", { defaultValue: "Predict" }) },
+    { href: "/about",   label: t("nav.about", { defaultValue: "About" }) },
   ];
-
-  if (user) {
-    NAV_LINKS.push({ href: "/history", label: t("nav.history") });
-  }
 
   return (
     <header
@@ -79,7 +72,7 @@ export function Navbar() {
           {/* Lang Switcher */}
           <div className="relative hidden sm:block">
             <button
-              onClick={() => { setLangOpen(!langOpen); setThemeOpen(false); setAuthOpen(false); }}
+              onClick={() => { setLangOpen(!langOpen); setThemeOpen(false); }}
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm transition-all text-[hsl(var(--muted-foreground))]"
             >
               <span>{currentLang?.flag}</span>
@@ -119,7 +112,7 @@ export function Navbar() {
           {/* Theme Switcher */}
           <div className="relative hidden sm:block">
             <button
-              onClick={() => { setThemeOpen(!themeOpen); setLangOpen(false); setAuthOpen(false); }}
+              onClick={() => { setThemeOpen(!themeOpen); setLangOpen(false); }}
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm transition-all"
               style={{ background: "hsl(var(--muted))", color: "hsl(var(--foreground))" }}
             >
@@ -154,53 +147,11 @@ export function Navbar() {
             </AnimatePresence>
           </div>
 
-          {/* Auth Switcher */}
-          <div className="relative hidden sm:block">
-            {user ? (
-               <button
-                 onClick={() => { setAuthOpen(!authOpen); setLangOpen(false); setThemeOpen(false); }}
-                 className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all hover:bg-[hsl(var(--muted))]"
-               >
-                 <UserIcon className="w-4 h-4" />
-               </button>
-            ) : (
-                <Link
-                  href="/auth/login"
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-all hover:bg-[hsl(var(--muted))]"
-                >
-                  {t("nav.login")}
-                </Link>
-            )}
-
-            <AnimatePresence>
-              {authOpen && user && (
-                <motion.div
-                  initial={{ opacity: 0, y: -8, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -8, scale: 0.95 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute right-0 top-full mt-2 w-48 rounded-xl overflow-hidden shadow-2xl z-50 bg-[hsl(var(--card))] border border-[hsl(var(--border))]"
-                >
-                  <div className="px-4 py-3 border-b border-[hsl(var(--border))]">
-                    <p className="text-xs text-[hsl(var(--muted-foreground))] uppercase tracking-wider mb-1">Signed in as</p>
-                    <p className="text-sm font-mono truncate">{user.email}</p>
-                  </div>
-                  <button
-                    onClick={() => { logout(); setAuthOpen(false); }}
-                    className="w-full flex items-center gap-2 px-4 py-3 text-sm text-[hsl(var(--destructive))] hover:bg-[hsl(var(--muted))] transition-colors text-left"
-                  >
-                    <LogOut className="w-4 h-4" /> {t("nav.logout")}
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
           <Link
             href="/predict"
             className="hidden lg:flex btn-primary px-4 py-2 rounded-lg text-sm font-semibold"
           >
-            {t("nav.startAssessment")}
+            {t("nav.startAssessment", { defaultValue: "Start Assessment" })}
           </Link>
 
           {/* Mobile hamburger */}
@@ -239,32 +190,13 @@ export function Navbar() {
                   {link.label}
                 </Link>
               ))}
-              
-              {!user && (
-                 <Link
-                   href="/auth/login"
-                   onClick={() => setMenuOpen(false)}
-                   className="block px-4 py-2.5 rounded-lg text-sm font-medium text-[hsl(var(--muted-foreground))]"
-                 >
-                   {t("nav.login")}
-                 </Link>
-              )}
-
-              {user && (
-                 <button
-                   onClick={() => { logout(); setMenuOpen(false); }}
-                   className="w-full flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-[hsl(var(--destructive))]"
-                 >
-                   <LogOut className="w-4 h-4" /> {t("nav.logout")}
-                 </button>
-              )}
 
               <Link
                 href="/predict"
                 onClick={() => setMenuOpen(false)}
                 className="block btn-primary px-4 py-2.5 rounded-lg text-sm font-semibold text-center mt-2"
               >
-                {t("nav.startAssessment")}
+                {t("nav.startAssessment", { defaultValue: "Start Assessment" })}
               </Link>
             </div>
           </motion.div>

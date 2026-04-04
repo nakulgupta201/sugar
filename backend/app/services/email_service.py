@@ -17,7 +17,7 @@ SMTP_PASS = os.getenv("SMTP_PASS", "")
 FROM_NAME = os.getenv("FROM_NAME", "DiabetesAI")
 
 
-async def send_prediction_email(to_email: str, result) -> None:
+async def send_prediction_email(to_email: str, result, pdf_path=None) -> None:
     if not SMTP_USER or not SMTP_PASS:
         logger.warning("SMTP credentials not configured — email skipped")
         return
@@ -135,11 +135,20 @@ async def send_prediction_email(to_email: str, result) -> None:
     </html>
     """
 
-    msg = MIMEMultipart("alternative")
+    msg = MIMEMultipart("mixed")
+    html_part = MIMEMultipart("alternative")
+    html_part.attach(MIMEText(html, "html"))
+    msg.attach(html_part)
     msg["Subject"] = subject
     msg["From"]    = f"{FROM_NAME} <{SMTP_USER}>"
     msg["To"]      = to_email
-    msg.attach(MIMEText(html, "html"))
+    
+    if pdf_path and pdf_path.exists():
+        from email.mime.application import MIMEApplication
+        with open(pdf_path, "rb") as f:
+            pdf_attachment = MIMEApplication(f.read(), _subtype="pdf")
+            pdf_attachment.add_header('Content-Disposition', 'attachment', filename=pdf_path.name)
+            msg.attach(pdf_attachment)
 
     await aiosmtplib.send(
         msg,

@@ -1,0 +1,46 @@
+
+> frontend@0.1.0 build
+> next build
+
+▲ Next.js 16.2.1 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+Found 1 warning while optimizing generated CSS:
+
+[2m│   }[22m
+[2m│ }[22m
+[2m│[22m @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
+[2m┆[22m        [33m[2m^--[22m @import rules must precede all rules aside from @charset and @layer statements[39m
+[2m┆[22m
+[2m│ :root {[22m
+[2m│   --font-inter: "Inter", system-ui, sans-serif;[22m
+
+
+> Build error occurred
+Error: Turbopack build failed with 1 errors:
+./node_modules/@hookform/resolvers/zod/dist/zod.mjs:1:127
+Module not found: Can't resolve 'zod/v4/core'
+[31m[1m>[0m [90m1 |[0m ...s [36mas[0m o}[36mfrom[0m[32m"react-hook-form"[0m;[36mimport[0m*[36mas[0m n [36mfrom[0m[32m"zod/v4/core"[0m;[36mfunction[0m t(r,e){[36mtry[0m{[36mvar[0m o=r().[36m..[0m
+  [90m  |[0m                                 [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m ...
+  [90m3 |[0m ...
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/@hookform/resolvers/zod/dist/zod.mjs [Client Component Browser]
+    ./src/app/auth/login/page.tsx [Client Component Browser]
+    ./src/app/auth/login/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/@hookform/resolvers/zod/dist/zod.mjs [Client Component SSR]
+    ./src/app/auth/login/page.tsx [Client Component SSR]
+    ./src/app/auth/login/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at ./node_modules/ (hookform/resolvers/zod/dist/zod.mjs:1:127)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)

@@ -36,7 +36,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./ml/artifacts:/app/ml/artifacts:ro
+      - ml_artifacts:/app/app/ml/artifacts
     env_file:
       - ./backend/.env
     environment:
@@ -60,7 +60,7 @@ services:
       dockerfile: Dockerfile
     command: ["celery", "-A", "app.core.celery_app.celery", "worker", "--loglevel=info"]
     volumes:
-      - ./ml/artifacts:/app/ml/artifacts:ro
+      - ml_artifacts:/app/app/ml/artifacts
     env_file:
       - ./backend/.env
     environment:
@@ -82,7 +82,8 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+      - BACKEND_URL=http://backend:8000
+      - NEXT_PUBLIC_API_URL=
     depends_on:
       - backend
     restart: unless-stopped
@@ -90,3 +91,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  ml_artifacts:
